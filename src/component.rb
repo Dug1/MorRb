@@ -3,8 +3,7 @@ require_relative 'variable_state.rb'
 module MorRb
 
 	class Component
-		attr_accessor :port, :default,:hash 
-		attr_reader :state
+		attr_accessor :port, :default,:hash, :state
 	
 		def initialize(hash, port, default)
 			@hash = hash

@@ -206,59 +206,59 @@ end
 #Shoes.app do
 #	background "#222".."#444"
 #	stack do 
-#	@speedometer = speedometer(:height => 200, :width => 200)
-#	@shifter = shifter({:value => 0.5, :height => 200, :width => 200})
-#		@shifter.state.alerted do |value|
-#			@speedometer.state.value = value
-#		end
+#		@speedometer = speedometer(:height => 200, :width => 200)
+#		#@shifter = shifter({:value => 0.5, :height => 200, :width => 200})
+#		#@shifter.state.alerted do |value|
+#		#	@speedometer.state.value = value
+#		#end
 #	end
-#	hello = button "hello" 
-#	okay =	button "okay" 
-#	yay = button "yay"
-#	
-#	@para = para "hello"
-#	@radio = MorWidgets::CustomRadio.new({:children => [hello, okay, yay]})
-#	@radio.when_on(1) do 
-#		@para.text = "hello"
-#	end
-#	@radio.when_on(2) do 
-#		@para.text = "okay"
-#	end
-#	@radio.when_on(3) do 
-#		@para.text = "yay"
-#	end
-#	text = para ""
-#	@target = text_button(:height => 50, :width => 100)
-#	@target.state.alerted do
-#		text.replace(@target.state.value.to_s)
-#	end	
-#	rar = text_button(:height => 100, :width => 200, :toggle => false)
-#	compressor = shape_button do |part|
-#		stack :width => 200, :height => 150 do
-#			part['compressor'] = shape(:width => 200, :height => 150)do
-#				nostroke
-#				fill red
-#				oval(:top => 50, :left => 25, :height => 75, :width => 25)
-#				oval(:top => 50, :left => 150, :height => 75, :width => 25)
-#				rect(:top => 49, :left => 38, :height => 76, :width => 125, :curve => 2)
-#				rect(:top => 25, :left => 45, :height => 10, :width => 125, :curve => 2)
-#				rect(:top => 21, :left => 36, :height => 16, :width => 32, :curve => 6)
-#				rect(:top => 30, :left => 38, :height => 30, :width => 26)
-#			end
-#			part['caption'] = subtitle("OFF").style(:align => 'center', :top => 65, :stroke => white)
-#		end
-#	end
-#	
-#	compressor.when_on do |part|
-#		part['compressor'].style(:fill => green)
-#		part['caption'].replace("ON")
-#	end
-#	compressor.when_off do |part|
-#		part['compressor'].style(:fill => red)
-#		part['caption'].replace("OFF")
-#	end
-#
-#	compressor.state.alerted do |new|
-#		text.replace(new)
-#	end
+#	#hello = button "hello" 
+#	#okay =	button "okay" 
+#	#yay = button "yay"
+#	#
+#	#@para = para "hello"
+#	#@radio = MorWidgets::CustomRadio.new({:children => [hello, okay, yay]})
+#	#@radio.when_on(1) do 
+#	#	@para.text = "hello"
+#	#end
+#	#@radio.when_on(2) do 
+#	#	@para.text = "okay"
+#	#end
+#	#@radio.when_on(3) do 
+#	#	@para.text = "yay"
+#	#end
+#	#text = para ""
+#	#@target = text_button(:height => 50, :width => 100)
+#	#@target.state.alerted do
+#	#	text.replace(@target.state.value.to_s)
+#	#end	
+#	#rar = text_button(:height => 100, :width => 200, :toggle => false)
+#	#compressor = shape_button do |part|
+#	#	stack :width => 200, :height => 150 do
+#	#		part['compressor'] = shape(:width => 200, :height => 150)do
+#	#			nostroke
+#	#			fill red
+#	#			oval(:top => 50, :left => 25, :height => 75, :width => 25)
+#	#			oval(:top => 50, :left => 150, :height => 75, :width => 25)
+#	#			rect(:top => 49, :left => 38, :height => 76, :width => 125, :curve => 2)
+#	#			rect(:top => 25, :left => 45, :height => 10, :width => 125, :curve => 2)
+#	#			rect(:top => 21, :left => 36, :height => 16, :width => 32, :curve => 6)
+#	#			rect(:top => 30, :left => 38, :height => 30, :width => 26)
+#	#		end
+#	#		part['caption'] = subtitle("OFF").style(:align => 'center', :top => 65, :stroke => white)
+#	#	end
+#	#end
+#	#
+#	#compressor.when_on do |part|
+#	#	part['compressor'].style(:fill => green)
+#	#	part['caption'].replace("ON")
+#	#end
+#	#compressor.when_off do |part|
+#	#	part['compressor'].style(:fill => red)
+#	#	part['caption'].replace("OFF")
+#	#end
+#    #
+#	#compressor.state.alerted do |new|
+#	#	text.replace(new)
+#	#end
 #end

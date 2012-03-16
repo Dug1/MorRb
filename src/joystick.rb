@@ -1,8 +1,11 @@
 require 'sdl'
+require 'drb/drb'
 require_relative 'variable_state.rb'
 
 module MorRb
 	class Joystick
+		include DRb::DRbUndumped
+		
 		SDL.init(SDL::INIT_JOYSTICK)
 		@@axis_max = 32768
 		
@@ -14,7 +17,7 @@ module MorRb
 			@joystick = joystick
 			@axes = []
 			@buttons = []
-			@joystick.num_axis.times {|x| @axes[x] = VariableState.new(@joystick.axis(x))}
+			@joystick.num_axes.times {|x| @axes[x] = VariableState.new(@joystick.axis(x))}
 			@joystick.num_buttons.times {|x| @buttons[x] = VariableState.new(@joystick.button(x))}
 		end
 		
@@ -25,7 +28,7 @@ module MorRb
 		def button(port)
 			@buttons[port]
 		end
-		
+
 		def update
 			Joystick.poll
 			0.upto(@axes.size - 1) do |x|

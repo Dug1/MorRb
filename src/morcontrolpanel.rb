@@ -1,9 +1,8 @@
-require 'variable_state.rb'
-require 'robot.rb'
-require 'reactor.rb'
-require 'morwidgets.rb'
-require 'sdl'
-
+require_relative 'variable_state.rb'
+require_relative 'robot.rb'
+require_relative 'reactor.rb'
+require_relative 'morwidgets.rb'
+require 'drb/drb'
 
 class MorTorqControlPanel < Shoes
 	url '/' , :index
@@ -18,25 +17,25 @@ class MorTorqControlPanel < Shoes
 	def header(current_screen)
 		@screens = ["Home","Game","DriveTrain","Conveyor","Turret","Hammer"]
 		tab_width = 1.0/@screens.size
-		flow :width => "100%", :height => 38 do 
+		flow :left => 0, :top => 0, :width => "100%", :height => 38 do 
 			@screens.each do |name|
 				if(current_screen != name)
-					tab = flow :width => tab_width do
+					tab = flow(:width => tab_width, :height => "100%") do
 						background gold..orange
-						caption(name).style(:align => true, :align => "center", :stroke => gray)
+						caption name, :margin_top => 5, :align => "center", :stroke => gray
 					end
 					
 					tab.hover do 
 						tab.clear do
 							background orange..dimgray
-							caption(name).style(:align => true, :align => "center", :stroke => white)
+							caption name, :margin_top => 5, :align => "center", :stroke => white
 						end
 					end
 					
 					tab.leave do 
 						tab.clear do
 							background gold..orange
-							caption(name).style(:align => true, :align => "center", :stroke => gray)
+							caption name, :margin_top => 5, :align => "center", :stroke => gray
 						end
 					end
 					
@@ -44,12 +43,12 @@ class MorTorqControlPanel < Shoes
 						@@reactor.shutdown
 						visit('/' + name.to_s)
 						@@reactor.restart
-						@joystick.close if instance_variable_defined?(:@joystick)
+						@@server.close_joystick
 					end
 				else
-					tab = flow :width => tab_width do
+					tab = flow :width => tab_width, :height => "100%" do
 						background orange..dimgray
-						caption(name).style(:align => true, :align => "center", :stroke => white)
+						caption name, :margin_top => 5, :align => "center", :stroke => white
 					end
 				end
 			end
@@ -71,8 +70,11 @@ class MorTorqControlPanel < Shoes
 	
 	def index
 		@@reactor = MorRb::Reactor.new() unless defined?(:@@reactor).nil?
-		@@robot = MorRb::Robot.new() unless defined?(:@@robot).nil?
 		@@reactor.shutdown
+		unless(defined?(:@@server).nil?)
+			DRb.start_service
+			@@server = DRb::DRbObject.new_with_uri("druby://localhost:1515")
+		end
 		background "#222".."#444"
 		stack do 
 			header "Home" 
@@ -91,15 +93,27 @@ class MorTorqControlPanel < Shoes
 			
 			shifter(:height => 200, :width => 100, :top => 25, :left => 100).state.alerted do |x|
 				tl.state.value = (2*x - 1).abs
+				@@reactor.schedule do
+					@@server.robot.motor(1).set(2*x - 1)
+				end
 			end
 			shifter(:height => 200, :width => 100, :top => 300, :left => 100).state.alerted do |x|
 				tr.state.value = (2*x - 1).abs
+				@@reactor.schedule do
+					@@server.robot.motor(2).set(2*x - 1)
+				end
 			end
 			shifter(:height => 200, :width => 100, :top => 25, :left => 874).state.alerted do |x|
 				bl.state.value = (2*x - 1).abs
+				@@reactor.schedule do
+					@@server.robot.motor(3).set(2*x - 1)
+				end
 			end
 			shifter(:height => 200, :width => 100, :top => 300, :left => 874).state.alerted do |x|
 				br.state.value = (2*x - 1).abs
+				@@reactor.schedule do
+					@@server.robot.motor(4).set(2*x - 1)
+				end
 			end
 			
 			draw_stop
@@ -119,33 +133,37 @@ class MorTorqControlPanel < Shoes
 		flow(:height => -38, :width => "100%") do
 			stack :center => true, :left => 712, :top => 150, :height => 280, :width => 200 do
 				subtitle("Bottom").style(:align => 'center', :stroke => white)
-				bot_shifter = shifter(:height => 200, :width => 100).move(25,60)
+				@bot_shifter = shifter(:height => 200, :width => 100).move(25,60)
 				text_button(:left => 125, :top => 135,:height => 50, :width => 50, :toggle => false, :text => 'Zero', :on_color => orange(0.5), :off_color => orange(0.5)).state.alerted do |pressed|
-					bot_shifter.state.value = 0.5 if pressed
+					@bot_shifter.state.value = 0.5 if pressed
 				end
 			end
 			stack :center => true, :left => 112, :top => 150, :height => 280, :width => 200 do
 				subtitle("Top").style(:align => 'center', :stroke => white)
-				top_shifter = shifter(:height => 200, :width => 100).move(125,60)
+				@top_shifter = shifter(:height => 200, :width => 100).move(125,60)
 				text_button(:left => 25, :top => 135,:height => 50, :width => 50, :toggle => false, :text => 'Zero', :on_color => orange(0.5), :off_color => orange(0.5)).state.alerted do |pressed|
-					top_shifter.state.value = 0.5 if pressed
+					@top_shifter.state.value = 0.5 if pressed
 				end
 			end
+			
+			@bot_shifter.state.alerted do |value|
+				@@reactor.schedule do |value|
+					@@server.robot.bot_con(2*value -1)
+				end
+			end
+			
+			@top_shifter.state.alerted do |value|
+				@@reactor.schedule do
+					@@server.robot.top_con(2*value -1)
+				end
+			end
+			
 			draw_stop
 		end
 	end
 	
 	def game
-		#@joystick = Joystick.new(SDL::Joystick.open(0))
-		#@joystick.axis(1).alerted do
-		#	@@reactor.schedule {@@robot.drive(@joystick)}
-		#end
-		#@joystick.axis(2).alerted do
-		#	@@reactor.schedule {@@robot.drive(@joystick)}
-		#end
-		#@joystick.axis(3).alerted do
-		#	@@reactor.schedule {@@robot.drive(@joystick)}
-		#end
+		@@server.open_joystick
 		
 		background "#222".."#444"
 		header "Game" 
@@ -164,17 +182,58 @@ class MorTorqControlPanel < Shoes
 				end
 				fire.when_on do |part|
 					part['base'].style(:stroke => red)
+					@@reactor.schedule do
+						@@server.robot.flywheel(@fly_control.state.value)
+						@@server.robot.top_con(@fly_control.state.value)
+					end
 				end
 				fire.when_off do |part|
 					part['base'].style(:stroke => green)
+					@@reactor.schedule do
+						@@server.robot.flywheel(0)
+						@@server.robot.top_con(0)
+					end
 				end
 				
-				text_button(:left => 0, :top => 210,:height => 65, :width => 200, :toggle => false, :text => "Pick-Up", :on_color => red(0.5), :off_color => orange(0.5))
-				text_button(:left => 0, :top => 300,:height => 65, :width => 200, :toggle => false, :text => "Purge", :on_color => red(0.5), :off_color => orange(0.5))
+				pick_up = text_button(:left => 0, :top => 210,:height => 65, :width => 200, :toggle => false, :text => "Pick-Up", :on_color => red(0.5), :off_color => orange(0.5))
+				purge = text_button(:left => 0, :top => 300,:height => 65, :width => 200, :toggle => false, :text => "Purge", :on_color => red(0.5), :off_color => orange(0.5))
 				
-				fire.state.alerted do |i|
-					@@reactor.schedule(i) do |x|
-						@@robot.set_motor()
+				pick_up.state.alerted do |state|
+					@@reactor.schedule do
+						if(state)
+							@@server.robot.bot_con(-1)
+						else
+							@@server.robot.bot_con(0)
+						end
+					end
+				end
+				
+				purge.state.alerted do |state|
+					@@reactor.schedule do
+						if(state)
+							@@server.robot.top_con(-1)
+							@@server.robot.bot_con(1)
+						else
+							@@server.robot.bot_con(0)
+							@@server.robot.bot_con(0)
+						end
+					end
+				end
+			end
+			flow :left =>100, :top => 200,:width => 200, :height =>250 do
+				@fly_control = shifter(:height => 200, :width => 100, :left => 125, :top => 20)
+				text_button(:on_color => orange(0.5),:text => '100',:toggle => false, :top => 20, :left => 25, :height => 40, :width => 75).state.alerted do |value|
+					@fly_control.state.value = 1.0
+				end
+				text_button(:on_color => orange(0.5),:text => '75',:toggle => false, :top => 70, :left => 25, :height => 40, :width => 75).state.alerted do |value|
+					@fly_control.state.value = 0.75
+				end
+				text_button(:on_color => orange(0.5),:text => '50',:toggle => false, :top => 120, :left => 25, :height => 40, :width => 75).state.alerted do |value|
+					@fly_control.state.value = 0.5
+				end
+				text_button(:on_color => orange(0.5),:text => '25',:toggle => false, :top => 170, :left => 25, :height => 40, :width => 75).state.alerted do |value|
+					@fly_control.state.value = 0.25
+				end
 			end
 			draw_stop
 		end
@@ -269,6 +328,13 @@ class MorTorqControlPanel < Shoes
 							rect(:width => 200, :height => 200, :curve => 10)
 						end
 					end
+				end
+				
+				@hammer.state.alerted do |value|
+					@@server.robot.hammer(value)
+				end
+				compressor_switch.state.alerted do |value|
+					@@server.robot.compressor(value)
 				end
 			end
 		end
